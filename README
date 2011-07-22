@@ -1,0 +1,10 @@
+Patch to jqlot's highlighter plugin to support arbitrary strings on highlight tooltips.
+
+This patch implements the work done by Chris Folger on an older version of the plugin:
+
+http://www.cefolger.net/2011/04/enabling-jqplot-highlighter-to-use-tick.html
+
+ALso includes a workaround for a bug in jqplot that breaks tooltips on plots with 
+null points.
+
+Patch is against jqplot 1.0.0b2_r792.

@@ -1,0 +1,96 @@
+--- jqplot.highlighter.js	2011-06-21 19:14:56.000000000 -0700
++++ jqplot.highlighter.mod.js	2011-07-22 13:50:02.000000000 -0700
+@@ -151,6 +151,12 @@
+         this.bringSeriesToFront = false;
+         this._tooltipElem;
+         this.isHighlighting = false;
++		
++        // prop: useTickMarks
++        // set true to enable displaying of the tick mark corresponding 
++        // to the data point value instead of just a number 
++        this.useYTickMarks = false;
++        this.useXTickMarks = false;
+ 
+         $.extend(true, this, options);
+     };
+@@ -225,6 +231,15 @@
+     }
+     
+     function showTooltip(plot, series, neighbor) {
++
++		// FIXME: On charts with null values, points *after* 
++		//        nulls have busted gridData; neighbor.data will 
++		//        be undefined. To work around this, we look up 
++		//        the correct values in series._plotData.
++		var data = neighbor.data;
++		if (data==undefined) {
++			data = series._plotData[ neighbor.pointIndex ]
++		}
+         // neighbor looks like: {seriesIndex: i, pointIndex:j, gridData:p, data:s.data[j]}
+         // gridData should be x,y pixel coords on the grid.
+         // add the plot._gridPadding to that to get x,y in the target.
+@@ -236,11 +251,21 @@
+             var xfstr = series._xaxis._ticks[0].formatString;
+             var yfstr = series._yaxis._ticks[0].formatString;
+             var str;
+-            var xstr = xf(xfstr, neighbor.data[0]);
++            var xstr = xf(xfstr, data[0]);
+             var ystrs = [];
++
++            if(hl.useXTickMarks && series._xaxis._ticks[data[0]])
++        	{
++            	xstr = xf(xfstr, series._xaxis._ticks[data[0]].label); 
++        	}
++                        
+             for (var i=1; i<hl.yvalues+1; i++) {
+-                ystrs.push(yf(yfstr, neighbor.data[i]));
++				if(hl.useYTickMarks && series._yaxis._ticks[data[1]]) 
++					ystrs.push(yf(yfstr, series._yaxis._ticks[data[1]].label)); 
++				else
++					ystrs.push(yf(yfstr, data[i]));
+             }
++ 
+             if (hl.formatString) {
+                 switch (hl.tooltipAxes) {
+                     case 'both':
+@@ -303,16 +328,16 @@
+         else {
+             var str;
+             if (hl.tooltipAxes == 'both' || hl.tooltipAxes == 'xy') {
+-                str = $.jqplot.sprintf(hl.tooltipFormatString, neighbor.data[0]) + hl.tooltipSeparator + $.jqplot.sprintf(hl.tooltipFormatString, neighbor.data[1]);
++                str = $.jqplot.sprintf(hl.tooltipFormatString, data[0]) + hl.tooltipSeparator + $.jqplot.sprintf(hl.tooltipFormatString, data[1]);
+             }
+             else if (hl.tooltipAxes == 'yx') {
+-                str = $.jqplot.sprintf(hl.tooltipFormatString, neighbor.data[1]) + hl.tooltipSeparator + $.jqplot.sprintf(hl.tooltipFormatString, neighbor.data[0]);
++                str = $.jqplot.sprintf(hl.tooltipFormatString, data[1]) + hl.tooltipSeparator + $.jqplot.sprintf(hl.tooltipFormatString, data[0]);
+             }
+             else if (hl.tooltipAxes == 'x') {
+-                str = $.jqplot.sprintf(hl.tooltipFormatString, neighbor.data[0]);
++                str = $.jqplot.sprintf(hl.tooltipFormatString, data[0]);
+             }
+             else if (hl.tooltipAxes == 'y') {
+-                str = $.jqplot.sprintf(hl.tooltipFormatString, neighbor.data[1]);
++                str = $.jqplot.sprintf(hl.tooltipFormatString, data[1]);
+             } 
+         }
+         if ($.isFunction(hl.tooltipContentEditor)) {
+@@ -329,7 +354,7 @@
+         }
+ 		
+ 		var loc = locations;
+-		if (series.fillToZero && series.fill && neighbor.data[1] < 0) {
++		if (series.fillToZero && series.fill && data[1] < 0) {
+ 			loc = oppositeLocations;
+ 		}
+ 		
+@@ -415,7 +440,7 @@
+                 if (hl.bringSeriesToFront) {
+                     plot.moveSeriesToFront(neighbor.seriesIndex);
+                 }
+-            }
++			}
+         }
+     }
+-})(jQuery);
+\ No newline at end of file
++})(jQuery);
